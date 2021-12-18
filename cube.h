@@ -7,6 +7,7 @@
 #include <cstdlib>
 #include <string>
 #include <vector>
+#include <algorithm>
 using namespace std;
 
 class cube;
@@ -23,7 +24,12 @@ class cube {
     //Post:
     cube(const cube &c);
 
-    void test();
+    string test();
+    int countTowers();
+    void printMatrix();
+    void removeRandomTowers(int num = 10);
+    void addTowers(string s);
+    void clearTowers();
 
   private:
       const int m_cube_levels[6][6] = {
@@ -44,7 +50,8 @@ class cube {
 
     void createTowers();
     void initTowerPos();
-    void printMatrix();
+    
+    string printString();
     bool checkValid(colors c, int row, int col);
 
 };
