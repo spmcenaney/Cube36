@@ -12,6 +12,12 @@ tower::tower(const tower &t) {
   m_used = false;
 }
 
+void tower::copyTower(const tower &t) {
+  m_color = t.m_color;
+  m_size = t.m_size;
+  m_used = t.m_used;
+}
+
 void tower::initTower(colors c, int s) {           // default constructor
   m_color = c;
   m_size = s;

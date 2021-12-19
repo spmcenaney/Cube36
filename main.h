@@ -13,7 +13,9 @@ enum colors {
   YELLOW,
   GREEN,
   BLUE,
-  PURPLE
+  PURPLE,
+  SPECIAL_ORANGE,
+  SPECIAL_YELLOW
 };
 
 //char colSym[7] = {' ','R','O','Y','G','B','P'};

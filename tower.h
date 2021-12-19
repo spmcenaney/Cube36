@@ -22,6 +22,10 @@ class tower {
     //Pre:
     //Post:
     tower(const tower &t);
+    //Purpose: constructor for tower
+    //Pre:
+    //Post:
+    void copyTower(const tower &t);
     //Purpose: Init tower
     //Pre:
     //Post:

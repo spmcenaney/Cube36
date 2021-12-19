@@ -1,12 +1,39 @@
 //Cube.cpp
 #include "cube.h"
 #include <stdio.h>
+#include <ctype.h>
 
 cube::cube() {           // default constructor
   createTowers();
+  initTowerPos();
 }
 cube::cube(const cube &c) {
-  //
+  for (int i = 0; i < 6; i++) {
+    for (int j = 0; j < 6; j++) {
+      m_matrix[i][j] = c.m_matrix[i][j];
+    }
+  }
+  for (int i = 0; i < 6; i++) {
+    for (int j = 0; j < 6; j++) {
+     m_towers[i][j] = c.m_towers[i][j];
+    }
+  }
+  //createTowers();
+  //initTowerPos();
+}
+
+void cube::copyCube(const cube &c) {
+  for (int i = 0; i < 6; i++) {
+    for (int j = 0; j < 6; j++) {
+      m_matrix[i][j] = c.m_matrix[i][j];
+      m_towers[i][j].copyTower(c.m_towers[i][j]);
+    }
+  }
+  //createTowers();
+  //initTowerPos();
+}
+int cube::score() {
+  return countTowers();
 }
 
 string cube::test() {
@@ -37,6 +64,10 @@ void cube::initTowerPos() {
       m_matrix[row][col] = colSym[EMPTY];
     }
   }
+  m_towers[YELLOW-1][4].addTower();
+  m_matrix[1][2] = colSym[SPECIAL_YELLOW];
+  m_towers[ORANGE-1][5].addTower();
+  m_matrix[3][2] = colSym[SPECIAL_ORANGE];
   rowOffset = util.randNum(0,5);
   colOffset = util.randNum(0,5);
   for (int r = rowOffset; r < 6 + rowOffset; r++) {
@@ -45,6 +76,7 @@ void cube::initTowerPos() {
       int col = c%6;
       if((col == 2) && ((row == 1) || (row == 3))) {
         rand = util.randNum(-1,5);
+        rand = -1;
       } else {
         rand = util.randNum(0,5);
       }
@@ -55,14 +87,14 @@ void cube::initTowerPos() {
           if (row == 1) { // yellow special case
             if (m_towers[YELLOW-1][4].available() && checkValid(static_cast<colors>(YELLOW),row,col)) {
               m_towers[YELLOW-1][4].addTower();
-              m_matrix[row][col] = colSym[YELLOW];
+              m_matrix[row][col] = colSym[SPECIAL_YELLOW];
               //cout << "yellow special " << row << col << m_matrix[row][col] << endl;
               break;
             }
           } else { // orange special case
             if (m_towers[ORANGE-1][5].available() && checkValid(static_cast<colors>(ORANGE),row,col)) {
               m_towers[ORANGE-1][5].addTower();
-              m_matrix[row][col] = colSym[ORANGE];
+              m_matrix[row][col] = colSym[SPECIAL_ORANGE];
               //cout << "orange special " << row << col << m_matrix[row][col] << endl;
               break;
             }
@@ -82,12 +114,12 @@ void cube::initTowerPos() {
 
 bool cube::checkValid(colors c, int row, int col) {
   for (int i = col + 1; i <= col + 5; i++) {
-    if (colSym[c] == m_matrix[row][i%6]) {
+    if (colSym[c] == toupper(m_matrix[row][i%6])) {
       return false;
     }
   }
   for (int i = row + 1; i <= row + 5; i++) {
-    if (colSym[c] == m_matrix[i%6][col]) {
+    if (colSym[c] == toupper(m_matrix[i%6][col])) {
       return false;
     }
   }
@@ -98,6 +130,7 @@ void cube::clearTowers() {
   for (int row = 0; row < 6; row++) {
     for (int col = 0; col < 6; col++) {
       m_matrix[row][col] = colSym[EMPTY];
+      m_towers[row][col].removeTower();
     }
   }
 }
@@ -117,20 +150,41 @@ void cube::removeRandomTowers(int num) {
     char *itr = find(colSym,colSym+6,c);
     index = distance(colSym,itr);
     if (m_matrix[row][col] != colSym[EMPTY]) {
-      m_towers[index-1][5-b].removeTower();
-      m_matrix[row][col] = colSym[EMPTY];
-      i++;
+      if (m_matrix[row][col] == colSym[SPECIAL_ORANGE]) {
+        //cout << "*****special orange removed: " << 1 << " " << 5 << " from (" << row << "," << col << ")" << endl;
+        //m_towers[1][5].removeTower();
+        //throw 20;
+      } else if (m_matrix[row][col] == colSym[SPECIAL_YELLOW]) {
+        //cout << "*****special yellow removed: " << 2 << " " << 4 << " from (" << row << "," << col << ")" << endl;
+        //m_towers[2][4].removeTower();
+        //throw 20;
+      } else {
+        //cout << "removed: " << index-1 << " " << 5-b << " from (" << row << "," << col << ")" << endl;
+        m_towers[index-1][5-b].removeTower();
+        m_matrix[row][col] = colSym[EMPTY];
+        i++;
+      }
+      //m_matrix[row][col] = colSym[EMPTY];
+      //i++;
     }
   }
 }
 
-void cube::addTowers(string s) {
+void cube::addTowers(string s, const cube &c) {
   Utilities util;
   int rand;
   int stop;
   int b; // base hieght
   int rowOffset;
   int colOffset;
+  char ss[36];
+  strcpy(ss,s.c_str());
+  for (int i = 0; i < 6; i++) {
+    for (int j = 0; j < 6; j++) {
+      m_matrix[i][j] = ss[6*i+j];
+      m_towers[i][j].copyTower(c.m_towers[i][j]);
+    }
+  }
   rowOffset = util.randNum(0,5);
   colOffset = util.randNum(0,5);
   for (int r = rowOffset; r < 6 + rowOffset; r++) {
@@ -140,6 +194,7 @@ void cube::addTowers(string s) {
       if (m_matrix[row][col] == colSym[EMPTY]) {
         if((col == 2) && ((row == 1) || (row == 3))) {
           rand = util.randNum(-1,5);
+          rand = -1;
         } else {
           rand = util.randNum(0,5);
         }
@@ -150,14 +205,14 @@ void cube::addTowers(string s) {
             if (row == 1) { // yellow special case
               if (m_towers[YELLOW-1][4].available() && checkValid(static_cast<colors>(YELLOW),row,col)) {
                 m_towers[YELLOW-1][4].addTower();
-                m_matrix[row][col] = colSym[YELLOW];
+                m_matrix[row][col] = colSym[SPECIAL_YELLOW];
                 //cout << "yellow special " << row << col << m_matrix[row][col] << endl;
                 break;
               }
             } else { // orange special case
               if (m_towers[ORANGE-1][5].available() && checkValid(static_cast<colors>(ORANGE),row,col)) {
                 m_towers[ORANGE-1][5].addTower();
-                m_matrix[row][col] = colSym[ORANGE];
+                m_matrix[row][col] = colSym[SPECIAL_ORANGE];
                 //cout << "orange special " << row << col << m_matrix[row][col] << endl;
                 break;
               }
@@ -194,6 +249,19 @@ string cube::printString() {
     }
   }
   return s;
+}
+
+void cube::printTowers() {
+  for (int i = 0; i < 6; i++) {
+    for (int j = 0; j < 6; j++) {
+      if (m_towers[i][j].available()) {
+        cout << "N";
+      } else {
+        cout << "U";
+      }
+    }
+    cout << endl;
+  }
 }
 
 int cube::countTowers() {

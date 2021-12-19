@@ -6,6 +6,7 @@
 #include "Utilities.h"
 #include <cstdlib>
 #include <string>
+#include <cstring>
 #include <vector>
 #include <algorithm>
 using namespace std;
@@ -24,12 +25,19 @@ class cube {
     //Post:
     cube(const cube &c);
 
+    void copyCube(const cube &c);
+
+    int score();
     string test();
-    int countTowers();
+    
     void printMatrix();
     void removeRandomTowers(int num = 10);
-    void addTowers(string s);
+    void addTowers(string s, const cube &c);
     void clearTowers();
+
+    void printTowers();
+
+    string printString();
 
   private:
       const int m_cube_levels[6][6] = {
@@ -41,7 +49,7 @@ class cube {
       3,0,2,1,4,5
       };
 
-      char colSym[7] = {' ','R','O','Y','G','B','P'};
+      char colSym[9] = {' ','R','O','Y','G','B','P','o','y'};
 
       char m_matrix[6][6] = {};
       //tower m_cube_spots[6][6];
@@ -50,8 +58,10 @@ class cube {
 
     void createTowers();
     void initTowerPos();
+
+    int countTowers();
     
-    string printString();
+    
     bool checkValid(colors c, int row, int col);
 
 };
