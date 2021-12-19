@@ -9,7 +9,7 @@ tower::tower() {           // default constructor
 tower::tower(const tower &t) {
   m_color = t.m_color;
   m_size = t.m_size;
-  m_used = false;
+  m_used = false; // may change to be = t.m_used
 }
 
 void tower::copyTower(const tower &t) {
@@ -18,7 +18,7 @@ void tower::copyTower(const tower &t) {
   m_used = t.m_used;
 }
 
-void tower::initTower(colors c, int s) {           // default constructor
+void tower::initTower(colors c, int s) {
   m_color = c;
   m_size = s;
   m_used = false;

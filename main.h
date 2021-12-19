@@ -3,8 +3,7 @@
 #define MAIN_H
 
 /**
-This is to enumerate the directions.
-Gets passed into one function below.
+This is to enumerate the tower colors
 **/
 enum colors {
   EMPTY,
