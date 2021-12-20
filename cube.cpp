@@ -12,8 +12,6 @@ cube::cube(const cube &c) {
       m_towers[i][j] = c.m_towers[i][j];
     }
   }
-  //createTowers();
-  //initTowerPos();
 }
 
 void cube::copyCube(const cube &c) {
@@ -23,8 +21,6 @@ void cube::copyCube(const cube &c) {
       m_towers[i][j].copyTower(c.m_towers[i][j]);
     }
   }
-  //createTowers();
-  //initTowerPos();
 }
 
 int cube::score() {
@@ -34,11 +30,12 @@ int cube::score() {
 string cube::test() {
   createTowers();
   initTowerPos();
-  //printMatrix();
-  //cout << countTowers() << endl << endl;
   return printString();
 }
 
+/**
+ * Initializes towers
+ * */
 void cube::createTowers() {
   for (int c = RED; c <= PURPLE; c++) {
     for (int s = 1; s <= 6; s++) {
@@ -47,6 +44,9 @@ void cube::createTowers() {
   }
 }
 
+/**
+ * Initilizes matrix then fill with towers
+ * */
 void cube::initTowerPos() {
   for (int row = 0; row < 6; row++) {
     for (int col = 0; col < 6; col++) {
@@ -56,6 +56,9 @@ void cube::initTowerPos() {
   placeTowers();
 }
 
+/**
+ * updates matrix with new towers
+ * */
 void cube::addTowers(string s, const cube &c) {
   char ss[36];
   strcpy(ss,s.c_str());
@@ -68,10 +71,83 @@ void cube::addTowers(string s, const cube &c) {
   placeTowers();
 }
 
+/**
+ * updates matrix with new random towers
+ * */
 void cube::addNewTowers() {
   placeTowers();
 }
 
+/**
+ * main function to placing towers
+ * 
+ * this function will randomly place towers starting in a random spot.
+ * this is done to ensure that patterns are not repeats from always starting
+ * in the same coordinate
+ * 
+ * This function accounts for the special cases, and ensure that they have an
+ * equal chance of being picked as any other tower (no avantage nor disvantage)
+ * 
+ * */
+void cube::placeTowers() {
+  Utilities util;
+  int rand;
+  int stop;
+  int b; // base hieght
+  int rowOffset;
+  int colOffset;
+  rowOffset = util.randNum(0,5);
+  colOffset = util.randNum(0,5);
+  for (int r = rowOffset; r < 6 + rowOffset; r++) {
+    for (int c = colOffset; c < 6 + colOffset; c++) {
+      int row = r%6;
+      int col = c%6;
+      if (m_matrix[row][col] == colSym[EMPTY]) {
+        if((col == 2) && ((row == 1) || (row == 3))) {
+          rand = util.randNum(-1,5); // -1 to account for special cases
+        } else {
+          rand = util.randNum(0,5);
+        }
+        stop = rand + 6;
+        b = m_cube_levels[row][col];
+        do {
+          if (rand == -1) { // special case
+            if (row == 1) { // yellow special case
+              if (m_towers[YELLOW-1][4].available() // Yellow-5
+                  && checkValid(static_cast<colors>(YELLOW),row,col)) {
+                m_towers[YELLOW-1][4].addTower();
+                m_matrix[row][col] = colSym[SPECIAL_YELLOW];
+                break;
+              }
+            } else { // orange special case
+              if (m_towers[ORANGE-1][5].available() // Orange-6
+                  && checkValid(static_cast<colors>(ORANGE),row,col)) {
+                m_towers[ORANGE-1][5].addTower();
+                m_matrix[row][col] = colSym[SPECIAL_ORANGE];
+                break;
+              }
+            }
+            rand++;
+          }
+          if (m_towers[rand%6][5-b].available()
+              && checkValid(static_cast<colors>(rand%6+1),row,col)) {
+            m_towers[rand%6][5-b].addTower();
+            m_matrix[row][col] = colSym[(rand%6)+1];
+            break;
+          }
+          rand++;
+        } while (rand < stop);
+      }
+    }
+  }
+}
+
+/**
+ * Checks to ensure valid placement of tower
+ * 
+ * checks for same color in row and col
+ * 
+ * */
 bool cube::checkValid(colors c, int row, int col) {
   for (int i = col + 1; i <= col + 5; i++) {
     if (colSym[c] == toupper(m_matrix[row][i%6])) {
@@ -86,6 +162,9 @@ bool cube::checkValid(colors c, int row, int col) {
   return true;
 }
 
+/**
+ * clears towers off cube
+ * */
 void cube::clearTowers() {
   for (int row = 0; row < 6; row++) {
     for (int col = 0; col < 6; col++) {
@@ -95,6 +174,11 @@ void cube::clearTowers() {
   }
 }
 
+/**
+ * Removes random towers from cube for specified amount
+ * 
+ * special cases are just as likley to be removed;
+ * */
 void cube::removeRandomTowers(int num) {
   Utilities util;
   int row;
@@ -111,25 +195,21 @@ void cube::removeRandomTowers(int num) {
     index = distance(colSym,itr);
     if (m_matrix[row][col] != colSym[EMPTY]) {
       if (m_matrix[row][col] == colSym[SPECIAL_ORANGE]) {
-        //cout << "*****special orange removed: " << 1 << " " << 5 << " from (" << row << "," << col << ")" << endl;
-        //m_towers[1][5].removeTower();
-        //throw 20;
+        m_towers[ORANGE-1][5].removeTower();
       } else if (m_matrix[row][col] == colSym[SPECIAL_YELLOW]) {
-        //cout << "*****special yellow removed: " << 2 << " " << 4 << " from (" << row << "," << col << ")" << endl;
-        //m_towers[2][4].removeTower();
-        //throw 20;
+        m_towers[YELLOW-1][4].removeTower();
       } else {
-        //cout << "removed: " << index-1 << " " << 5-b << " from (" << row << "," << col << ")" << endl;
         m_towers[index-1][5-b].removeTower();
-        m_matrix[row][col] = colSym[EMPTY];
-        i++;
       }
-      //m_matrix[row][col] = colSym[EMPTY];
-      //i++;
+      m_matrix[row][col] = colSym[EMPTY];
+      i++;
     }
   }
 }
 
+/**
+ * print matix
+ * */
 void cube::printMatrix() {
   for (int i = 0; i < 6; i++) {
     for (int j = 0; j < 6; j++) {
@@ -140,6 +220,9 @@ void cube::printMatrix() {
   //cout << endl;
 }
 
+/**
+ * return cube puzzle string
+ * */
 string cube::printString() {
   string s = "";
   for (int i = 0; i < 6; i++) {
@@ -150,6 +233,12 @@ string cube::printString() {
   return s;
 }
 
+/**
+ * print towers
+ * 
+ * U for used
+ * N for not used
+ * */
 void cube::printTowers() {
   for (int i = 0; i < 6; i++) {
     for (int j = 0; j < 6; j++) {
@@ -163,6 +252,9 @@ void cube::printTowers() {
   }
 }
 
+/**
+ * tower counter
+ * */
 int cube::countTowers() {
   int count = 0;
   for (int i = 0; i < 6; i++) {
@@ -172,62 +264,4 @@ int cube::countTowers() {
     }
   }
   return count;
-}
-
-
-void cube::placeTowers() {
-  Utilities util;
-  int rand;
-  int stop;
-  int b; // base hieght
-  int rowOffset;
-  int colOffset;
-  /*m_towers[YELLOW-1][4].addTower();
-  m_matrix[1][2] = colSym[SPECIAL_YELLOW];
-  m_towers[ORANGE-1][5].addTower();
-  m_matrix[3][2] = colSym[SPECIAL_ORANGE];*/
-  rowOffset = util.randNum(0,5);
-  colOffset = util.randNum(0,5);
-  for (int r = rowOffset; r < 6 + rowOffset; r++) {
-    for (int c = colOffset; c < 6 + colOffset; c++) {
-      int row = r%6;
-      int col = c%6;
-      if (m_matrix[row][col] == colSym[EMPTY]) {
-        if((col == 2) && ((row == 1) || (row == 3))) {
-          rand = util.randNum(-1,5);
-          rand = -1;
-        } else {
-          rand = util.randNum(0,5);
-        }
-        stop = rand + 6;
-        b = m_cube_levels[row][col];
-        do {
-          if (rand == -1) { // special case
-            if (row == 1) { // yellow special case
-              if (m_towers[YELLOW-1][4].available() && checkValid(static_cast<colors>(YELLOW),row,col)) {
-                m_towers[YELLOW-1][4].addTower();
-                m_matrix[row][col] = colSym[SPECIAL_YELLOW];
-                //cout << "yellow special " << row << col << m_matrix[row][col] << endl;
-                break;
-              }
-            } else { // orange special case
-              if (m_towers[ORANGE-1][5].available() && checkValid(static_cast<colors>(ORANGE),row,col)) {
-                m_towers[ORANGE-1][5].addTower();
-                m_matrix[row][col] = colSym[SPECIAL_ORANGE];
-                //cout << "orange special " << row << col << m_matrix[row][col] << endl;
-                break;
-              }
-            }
-            rand++;
-          }
-          if (m_towers[rand%6][5-b].available() && checkValid(static_cast<colors>(rand%6+1),row,col)) {
-            m_towers[rand%6][5-b].addTower();
-            m_matrix[row][col] = colSym[(rand%6)+1];
-            break;
-          }
-          rand++;
-        } while (rand < stop);
-      }
-    }
-  }
 }
